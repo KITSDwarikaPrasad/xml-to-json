@@ -8,7 +8,9 @@ import java.util.stream.Stream;
 
 import org.json.JSONObject;
 import org.json.XML;
+import org.springframework.stereotype.Component;
 
+@Component
 public class XmlHelper {
 	
 	public static int PRETTY_PRINT_INDENT_FACTOR = 4;

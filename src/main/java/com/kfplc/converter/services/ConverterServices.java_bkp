@@ -1,0 +1,94 @@
+package com.kfplc.converter.services;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.Stack;
+import java.util.stream.Stream;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpStatus;
+import org.apache.http.entity.ContentType;
+import org.apache.http.nio.entity.NStringEntity;
+import org.elasticsearch.client.Response;
+import org.elasticsearch.client.RestClient;
+import org.json.JSONObject;
+import org.json.XML;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class ConverterServices {
+	
+	public static int PRETTY_PRINT_INDENT_FACTOR = 4;
+	String fileName = "C:\\Users\\prasad01\\OneDrive - Kingfisher PLC\\work\\KAPIs\\KAPI-2817-Configuring Elastic Search\\ProductLocation\\SAPECCtoProductLocationAPI_part0_20171003120232-0000.xml";
+	
+	@Autowired
+	RestClient esClient;
+	
+	public void convertXmlToJson(File xmlFile) {
+		
+	}
+
+	public void addXmlDataToES() {
+		try {
+			Stack<String> stack = new Stack<String>();
+			StringBuilder xmlStringBuilder = new StringBuilder();
+			StringBuilder bulkRequestBodyBuilder = new StringBuilder();
+			
+			String index = "datafeed";
+			String type = "product_location";
+			String actionMetaData = String.format("{ \"index\" : { \"_index\" : \"%s\", \"_type\" : \"%s\" } }%n", index, type);
+			Stream<String> stream = Files.lines(Paths.get(fileName));
+			
+			
+			stream
+			.skip(1)
+			.limit(10)
+			.forEach(content -> {
+				xmlStringBuilder.append(content);
+				if(stack.isEmpty()) {
+					stack.push("</" + content.substring(1, content.indexOf('>') + 1));
+					//System.out.println(stack);
+				}
+				if(stack.peek().equals(content)) {
+					// Convert xmlObject to JSONString
+					String jsonString = getJsonFromXml(xmlStringBuilder.toString());
+					System.out.println(jsonString);
+					
+					bulkRequestBodyBuilder.append(actionMetaData);
+					bulkRequestBodyBuilder.append(jsonString);
+					bulkRequestBodyBuilder.append("\n");
+					//TO-DO    Send to Elastic Search 
+					
+					//String response = sendJsonToElastic(jsonString);
+					xmlStringBuilder.delete(0, xmlStringBuilder.length());
+					stack.pop();
+				}
+				
+				HttpEntity entity = new NStringEntity(bulkRequestBodyBuilder.toString(), ContentType.APPLICATION_JSON);
+				Response response = null;
+				try {
+					response = esClient.performRequest("POST", "/"+ index +"/"+ type +"/_bulk", Collections.emptyMap(), entity);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				boolean status =  response.getStatusLine().getStatusCode() == HttpStatus.SC_OK;
+			});
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+private String getJsonFromXml(String xmlObjectString) {
+		
+		JSONObject xmlJSONObj = XML.toJSONObject(xmlObjectString);
+		String jsonString = xmlJSONObj.toString(PRETTY_PRINT_INDENT_FACTOR);
+		return jsonString;
+	}
+}
