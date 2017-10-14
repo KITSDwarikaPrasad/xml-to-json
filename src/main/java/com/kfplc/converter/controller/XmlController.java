@@ -33,6 +33,8 @@ public class XmlController {
     	System.out.println("----------------------------> XmlController------");
     }
     
+    public final Path UPLOADED_DIR = Paths.get("upload-dir");
+    
 	@RequestMapping(method = RequestMethod.GET)
 	public ResponseEntity<String> getXml() {
 		return null;
@@ -49,9 +51,11 @@ public class XmlController {
 		}
 
 		try {
-			storageService.saveUploadedFile(uploadedFile);
+			storageService.holdUploadedFile(uploadedFile);
 			System.out.println("------------Back to XmlController.addXml()------------------");
-			storageService.addDataToES(uploadedFile);
+//			storageService.addDataToES(uploadedFile);
+			storageService.addDataToESinTemplates(uploadedFile);
+			storageService.emptyUploadDir();
 		} catch (IOException e) {
 			e.printStackTrace();
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
