@@ -16,11 +16,11 @@ import org.springframework.data.elasticsearch.repository.config.EnableElasticsea
 
 
 @Configuration
-//@PropertySource(value = "classpath:elasticsearch.properties")
+@PropertySource(value = "classpath:elasticsearch.properties")
 //@EnableElasticsearchRepositories(basePackages = "com.kfplc.converter.repository")
 public class ElasticsearchConfiguration {
-//    @Resource
-//    private Environment environment;
+    @Resource
+    private Environment environment;
     
     public ElasticsearchConfiguration() {
     	System.out.println("----------------------------> ElasticsearchConfiguration------");
@@ -28,11 +28,10 @@ public class ElasticsearchConfiguration {
     @Bean
     public RestClient client() {
     	System.out.println("----------------------------> RestClient client()------");
-    	//System.out.println("----------------------------> environment.getProperty(\"elasticsearch.host\")------" + environment.getProperty("elasticsearch.host")+"------------------------------");
-
+    	System.out.println("----------------------------> environment.getProperty(\"elasticsearch.host\")------" + environment.getProperty("elasticsearch.host")+"------------------------------");
     	RestClient restClient = RestClient.builder(
- 		       //new HttpHost(environment.getProperty("elasticsearch.host"), Integer.parseInt(environment.getProperty("elasticsearch.port")), "http")
-		       new HttpHost("localhost", 9200, "http")
+ 		       new HttpHost(environment.getProperty("elasticsearch.host"), Integer.parseInt(environment.getProperty("elasticsearch.port")), "http")
+		       //new HttpHost("localhost", 9200, "http")
     		      // , new HttpHost("localhost", 9205, "http")
     		       ).build();
     	System.out.println("--------------restClient:"+restClient+"--------------------");
