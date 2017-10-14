@@ -29,8 +29,10 @@ public class XmlController {
 	@Autowired
 	StorageService storageService;
 	
-	private static String UPLOADED_FOLDER = "C://temp//";
-	
+    public XmlController() {
+    	System.out.println("----------------------------> XmlController------");
+    }
+    
 	@RequestMapping(method = RequestMethod.GET)
 	public ResponseEntity<String> getXml() {
 		return null;
@@ -38,7 +40,8 @@ public class XmlController {
 	
 	@RequestMapping(method = RequestMethod.POST,  consumes="multipart/form-data")
 	public ResponseEntity<String> addXml(@RequestParam(value="file", required=true) MultipartFile uploadedFile) {
-
+		
+		System.out.println("-----------XmlController.addXml()------------");
 		//converter.addXmlDataToES();
 
 		if (uploadedFile.isEmpty()) {
@@ -47,7 +50,10 @@ public class XmlController {
 
 		try {
 			storageService.saveUploadedFile(uploadedFile);
+			System.out.println("------------Back to XmlController.addXml()------------------");
+			storageService.addDataToES(uploadedFile);
 		} catch (IOException e) {
+			e.printStackTrace();
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 		//return null;
