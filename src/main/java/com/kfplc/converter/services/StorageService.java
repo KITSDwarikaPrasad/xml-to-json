@@ -24,6 +24,7 @@ import org.json.JSONObject;
 import org.json.XML;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,6 +36,9 @@ public class StorageService {
 	
 	@Autowired
 	RestClient client;
+	
+	@Autowired
+    ElasticsearchTemplate elasticsearchTemplate;
 	
     public StorageService() {
     	System.out.println("----------------------------> StorageService------");
@@ -61,7 +65,7 @@ public class StorageService {
 			String index = "datafeed";
 			String type = "product_location";
 			
-			String actionMetaData = String.format("{ \"index\" : { \"_index\" : \"%s\", \"_type\" : \"%s\", \"_id\" : \"%d\" } }%n", index, type, id++);
+			String actionMetaData = String.format("{ \"index\" : { \"_index\" : \"%s\", \"_type\" : \"%s\" } }%n", index, type);
 			Stream<String> stream = Files.lines(this.UPLOADED_DIR.resolve(uploadedFile.getOriginalFilename()));
 			
 			stream
@@ -76,9 +80,8 @@ public class StorageService {
 					// Convert xmlObject to JSONString
 					String jsonString = getJsonFromXml(xmlStringBuilder.toString());
 					
-					bulkRequestBodyBuilder.append(String.format("{ \"index\" : { \"_index\" : \"%s\", \"_type\" : \"%s\" } }%n", index, type));
-					bulkRequestBodyBuilder.append(new JSONObject(jsonString).toString(0));
-					bulkRequestBodyBuilder.append("\n");
+					bulkRequestBodyBuilder.append(actionMetaData);
+					bulkRequestBodyBuilder.append(new JSONObject(jsonString).toString(0)).append("\n");
 					//TO-DO    Send to Elastic Search 
 					xmlStringBuilder.delete(0, xmlStringBuilder.length());
 					stack.pop();
